@@ -7,8 +7,8 @@ We are currently supporting this script for the following PHP versions:
 | PHP version | Supported          |
 | ----------- | ------------------ |
 | < 5.6       | :x:                |
-| 5.6.4       | :green_check_mark: |
-| > 7.0       | :green_check_mark: |
+| 5.6.4       | :white_check_mark: |
+| > 7.0       | :white_check_mark: |
 
 ## Reporting a Vulnerability
 

@@ -34,7 +34,7 @@ a new repository for the script. This way, we can keep retro compatibility.
 # Fast install
 
 The script can be easy installed, by just cloning the project or downloading the
-repository files as a zip.
+release files as a zip.
 
 - Go to the server's user home folder and install the script there.
 
@@ -71,4 +71,4 @@ See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blo
 
 # License
 
-Licensed under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.
+Licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.

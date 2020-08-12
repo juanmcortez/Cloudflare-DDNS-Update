@@ -18,9 +18,10 @@ have a secure site with really low cost!
 - [Fast install](#fast-install)
 - [Step-by-Step install](#step-by-step-install)
 - [Security](#security)
-- [Collaborate](#collaborate)
+- [Contributing](#contributing)
 - [Contact](#contact)
 - [Support](#support)
+- [License](#license)
 
 
 # Cloudflare DNS Service
@@ -46,16 +47,28 @@ That's it!
 
 # Step-by-Step install
 
-See our [doc's page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/DETAILEDINSTALL.md) for details.
+See our [doc's page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/STEPBYSTEP.md) for details.
 
 
 # Security
 
+See our [security policy](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/SECURITY.md) for details
 
-# Collaborate
+
+# Contributing
+
+See our [contribution page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CONTRIBUTING.md) for details.
 
 
 # Contact
 
+See our [contact page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CONTACT.md) for details.
+
 
 # Support
+
+See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/SUPPORT.md) for details.
+
+# License
+
+Licensed under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.

@@ -47,7 +47,7 @@ That's it!
 
 # Step-by-Step install
 
-See our [doc's page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/STEPBYSTEP.md) for details.
+See our [doc's page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/STEPBYSTEP.md) for details.
 
 
 # Security
@@ -57,17 +57,17 @@ See our [security policy](https://github.com/juanmcortez/Cloudflare-DDNS-Update/
 
 # Contributing
 
-See our [contribution page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CONTRIBUTING.md) for details.
+See our [contribution page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/CONTRIBUTING.md) for details.
 
 
 # Contact
 
-See our [contact page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CONTACT.md) for details.
+See our [contact page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/CONTACT.md) for details.
 
 
 # Support
 
-See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/SUPPORT.md) for details.
+See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/SUPPORT.md) for details.
 
 # License
 

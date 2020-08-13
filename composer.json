@@ -1,4 +1,7 @@
 {
+    "name": "juamcortez/cloudflare-ddns-update",
+    "description": "An auto-updater of Cloudflare's DNS ip's.",
+    "type": "application",
     "author": [
         {
             "name": "Juan M. Cortéz",
@@ -12,5 +15,8 @@
     ],
     "require": {
         "vlucas/phpdotenv": "^4.1"
+    },
+    "autoload": {
+        "classmap": [ "CloudflareDDNS/src/" ]
     }
 }

@@ -34,7 +34,7 @@ a new repository for the script. This way, we can keep retro compatibility.
 # Fast install
 
 The script can be easy installed, by just cloning the project or downloading the
-repository files as a zip.
+release files as a zip.
 
 - Go to the server's user home folder and install the script there.
 
@@ -47,7 +47,7 @@ That's it!
 
 # Step-by-Step install
 
-See our [doc's page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/STEPBYSTEP.md) for details.
+See our [doc's page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/STEPBYSTEP.md) for details.
 
 
 # Security
@@ -57,18 +57,18 @@ See our [security policy](https://github.com/juanmcortez/Cloudflare-DDNS-Update/
 
 # Contributing
 
-See our [contribution page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CONTRIBUTING.md) for details.
+See our [contribution page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/CONTRIBUTING.md) for details.
 
 
 # Contact
 
-See our [contact page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CONTACT.md) for details.
+See our [contact page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/CONTACT.md) for details.
 
 
 # Support
 
-See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/SUPPORT.md) for details.
+See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/SUPPORT.md) for details.
 
 # License
 
-Licensed under the GNU GENERAL PUBLIC LICENSE. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.
+Licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.

@@ -30,14 +30,14 @@ try {
 
     // Start Class Processing
     $dnsUpdate = new \CloudflareDDNS\DDNSUpdate();
-    $result = $dnsUpdate->update($dotenv);
+    $result = $dnsUpdate->update();
 
     // Show response of operation
-    echo "\n$result\n\n";
+    echo "\n$result\n";
 
 } catch (\Exception $exc) {
 
     // Show error
-    echo "\nERROR! ".$exc->getMessage()." Fix the issue and restart.\n\n";
+    echo "\nError! ".$exc->getMessage()." Fix the issue and restart.\n\n";
 
 }

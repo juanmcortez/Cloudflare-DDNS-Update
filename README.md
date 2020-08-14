@@ -71,4 +71,4 @@ See our [support page](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blo
 
 # License
 
-Licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.
+Licensed under the GNU General Public License v3.0. See the [LICENSE](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE) file for details.

@@ -12,6 +12,11 @@ Once you have set-up the script and enable the service from Cloudflare, the only
 thing missing in your website is a free SSL certificate and that's it! You will
 have a secure site with really low cost!
 
+![Maintenance](https://img.shields.io/maintenance/yes/2020)
+![GitHub Release Date](https://img.shields.io/github/release-date/juanmcortez/Cloudflare-DDNS-Update?label=Release%20Date)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/juanmcortez/Cloudflare-DDNS-Update)
+[![GitHub issues](https://img.shields.io/github/issues/juanmcortez/Cloudflare-DDNS-Update?label=Feature%20Request%20-%20Issues)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/issues)
+[![GitHub license](https://img.shields.io/github/license/juanmcortez/Cloudflare-DDNS-Update?label=Project%20License)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/release/v1.1.0/LICENSE)
 
 # Table of contents
 - [Cloudflare DNS Service](#cloudflare-dns-service)

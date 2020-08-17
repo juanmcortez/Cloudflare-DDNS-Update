@@ -40,5 +40,5 @@ composer.phar
 
 # Custom ignores
 .env
-
 .vscode/
+_config.yml

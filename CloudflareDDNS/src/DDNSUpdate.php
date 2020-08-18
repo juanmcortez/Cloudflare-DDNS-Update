@@ -247,6 +247,9 @@ class DDNSUpdate
      */
     public function update()
     {
+        // Syslog
+        openlog("CloudflareDDNSUdpate", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+
         // Get the current ip addresses
         $this->_findCurrentIPofServer();
 
@@ -258,13 +261,18 @@ class DDNSUpdate
 
             // Everything went ok, check
             $update = $this->_checkIPsStatus();
-            return $this->_buildResponse('success', $update);
+            syslog(LOG_INFO, $this->_buildResponse('success', $update));
 
         } else {
 
             // Errors found!
-            return $this->_buildResponse('error', $status);
+            echo $this->_buildResponse('error', $status);
+            syslog(LOG_ERR, $this->_buildResponse('error', $status));
 
         }
+
+        // Syslog
+        closelog();
+
     }
 }

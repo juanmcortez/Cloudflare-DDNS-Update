@@ -14,6 +14,9 @@ require_once __DIR__.'/vendor/autoload.php';
 $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// Syslog
+openlog("CloudflareDDNSUdpate", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+
 try {
 
     // Check if credentials are in the env file.
@@ -30,14 +33,16 @@ try {
 
     // Start Class Processing
     $dnsUpdate = new \CloudflareDDNS\DDNSUpdate();
-    $result = $dnsUpdate->update();
-
-    // Show response of operation
-    echo "\n$result\n";
+    $dnsUpdate->update();
+    syslog(LOG_INFO, "Success!! Script processed.");
 
 } catch (\Exception $exc) {
 
     // Show error
     echo "\nError! ".$exc->getMessage()." Fix the issue and restart.\n\n";
+    syslog(LOG_ERR, "Error! ".$exc->getMessage()." Fix the issue and restart.");
 
 }
+
+// Syslog
+closelog();

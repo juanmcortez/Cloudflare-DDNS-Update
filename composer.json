@@ -2,7 +2,7 @@
     "name": "juamcortez/cloudflare-ddns-update",
     "description": "An auto-updater of Cloudflare's DNS ip's.",
     "type": "application",
-    "author": [
+    "authors": [
         {
             "name": "Juan M. Cortéz",
             "email": "juanm.cortez@gmail.com",

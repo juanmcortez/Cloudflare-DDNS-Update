@@ -1,12 +1,21 @@
 # Cloudflare-DDNS-Update
 
+<div align="center">
+
 ![Cloudflare DDNS Update](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/images/brand.png)
 
-![Maintenance](https://img.shields.io/maintenance/yes/2020)
-![GitHub Release Date](https://img.shields.io/github/release-date/juanmcortez/Cloudflare-DDNS-Update?label=Release%20Date)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/juanmcortez/Cloudflare-DDNS-Update)
-[![GitHub issues](https://img.shields.io/github/issues/juanmcortez/Cloudflare-DDNS-Update?label=Feature%20Request%20-%20Issues)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/issues)
-[![GitHub license](https://img.shields.io/github/license/juanmcortez/Cloudflare-DDNS-Update?label=Project%20License)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/release/v1.1.0/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/juanmcortez/Cloudflare-DDNS-Update?label=Features%20/%20Issues)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/issues)
+![Maintenance](https://img.shields.io/maintenance/yes/2020?label=Maintained)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat&label=Contributions)](https://github.com/dwyl/esta/issues)
+[![HitCount](https://hits.dwyl.com/juanmcortez/Cloudflare-DDNS-Update.svg)](https://hits.dwyl.com/juanmcortez/Cloudflare-DDNS-Update)
+
+![GitHub top language](https://img.shields.io/github/languages/top/juanmcortez/Cloudflare-DDNS-Update)
+[![GitHub tag](https://img.shields.io/github/tag/juanmcortez/Cloudflare-DDNS-Update?label=Tag)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/tags/)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/juanmcortez/Cloudflare-DDNS-Update?include_prereleases&label=Release)
+![GitHub (Pre-)Release Date](https://img.shields.io/github/release-date-pre/juanmcortez/Cloudflare-DDNS-Update?label=Release%20Date)
+[![GitHub license](https://img.shields.io/github/license/juanmcortez/Cloudflare-DDNS-Update?label=License)](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/LICENSE)
+
+</div>
 
 This project was born due to the necessity of having a webserver hosted locally
 and managing it's domains DNS ip's via Cloudflare DNS services.

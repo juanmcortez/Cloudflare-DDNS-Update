@@ -4,7 +4,7 @@
 
  - SSH access to your server.
  - Git installed or access to home folder via FTP.
- - PHP access via cli.
+ - PHP 8.2 or higher, with CLI access.
  - Cron access.
  - User writing permissions on the server.
  - Cloudflare DNS access.
@@ -17,14 +17,15 @@ FTP or SSH to your server:
 user@computer:~ $ ssh user@<server-ip>
 ```
 
-Once logged in, make sure you have access php on the cli:
+Once logged in, make sure you have access php on the cli (PHP 8.2 or higher
+is required):
 
 ```
 user@<server-ip>:~ $ php -v
-PHP 7.3.19-1~deb10u1 (cli) (built: Jul  5 2020 06:46:45) ( NTS )
-Copyright (c) 1997-2018 The PHP Group
-Zend Engine v3.3.19, Copyright (c) 1998-2018 Zend Technologies
-    with Zend OPcache v7.3.19-1~deb10u1, Copyright (c) 1999-2018, by Zend Technologies
+PHP 8.3.6 (cli) (built: Feb 22 2024 16:22:35) (NTS)
+Copyright (c) The PHP Group
+Zend Engine v4.3.6, Copyright (c) Zend Technologies
+    with Zend OPcache v8.3.6, Copyright (c), by Zend Technologies
 
 user@<server-ip>:~ $
 ```

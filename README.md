@@ -71,6 +71,9 @@ illustrated instructions on creating an API Token.
 
 # Fast install
 
+**Requires PHP 8.2 or higher** (and the [Composer](https://getcomposer.org/)
+dependency manager to install `vlucas/phpdotenv`).
+
 The script can be easy installed, by just cloning the project or downloading the
 release files as a zip.
 

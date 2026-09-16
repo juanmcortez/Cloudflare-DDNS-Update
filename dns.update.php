@@ -49,13 +49,22 @@ try {
     $dnsUpdate->update();
     syslog(LOG_INFO, "Success!! Script processed.");
 
+    // Syslog
+    closelog();
+
+    exit(0);
+
 } catch (\Exception $exc) {
 
     // Show error
     echo "\nError! ".$exc->getMessage()." Fix the issue and restart.\n\n";
     syslog(LOG_ERR, "Error! ".$exc->getMessage()." Fix the issue and restart.");
 
-}
+    // Syslog
+    closelog();
 
-// Syslog
-closelog();
+    // Make sure failures (including Cloudflare API errors) are surfaced
+    // with a non-zero exit code instead of looking like a successful run.
+    exit(1);
+
+}

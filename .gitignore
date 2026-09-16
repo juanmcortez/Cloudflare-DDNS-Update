@@ -44,3 +44,20 @@ composer.phar
 _config.yml
 *.*~
 *.kra
+
+# Dev-only Composer packages (e.g. PHPUnit) used to run the test suite.
+# The runtime `vendor/` tree is intentionally committed so the script can
+# run without a `composer install` step, but test tooling is not part of
+# that runtime tree and is fetched on demand via `composer install`.
+/vendor/bin/
+/vendor/phpunit/
+/vendor/sebastian/
+/vendor/theseer/
+/vendor/nikic/
+/vendor/myclabs/
+/vendor/phar-io/
+/vendor/composer/InstalledVersions.php
+/vendor/composer/installed.php
+/vendor/composer/platform_check.php
+.phpunit.result.cache
+/tests/.phpunit.cache/

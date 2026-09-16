@@ -104,8 +104,15 @@ class DDNSUpdate
             $this->_currDNSInfo[$key]['DOMAIN'] = $domain['DOMAIN'];
             $this->_currDNSInfo[$key]['ZONEID'] = $domain['ZONEID'];
 
-            // Check status of response
-            if (boolval($rspnse['success']) === true) {
+            // Check status of response. Cloudflare's API always returns a
+            // top-level "success" boolean; only trust the result when it is
+            // explicitly true, since a malformed/empty response must never
+            // be treated as a success.
+            if (is_array($rspnse)
+                && array_key_exists('success', $rspnse)
+                && boolval($rspnse['success']) === true
+                && is_array($rspnse['result'] ?? null)
+            ) {
                 // Success
                 foreach ($rspnse['result'] AS $idx => $domain) {
                     $this->_currDNSInfo[$key][$idx]['DNSID']    = $domain['id'];
@@ -115,10 +122,52 @@ class DDNSUpdate
                     $this->_currDNSInfo[$key][$idx]['TTL']      = $domain['ttl'];
                 }
             } else {
-                // Fail!
-                return $rspnse['errors'];
+                // Fail! Normalize the response into a consistent
+                // ['success' => false, 'errors' => [...]] shape, whether
+                // Cloudflare returned a proper error payload or the response
+                // was empty/malformed (e.g. curl failure, HTML error page).
+                return $this->_normalizeApiError($rspnse);
             }
         }
+
+        return null;
+    }
+
+    /**
+     * Normalize a (possibly malformed) Cloudflare API response into a
+     * consistent failure structure with human-readable error messages.
+     *
+     * Cloudflare's documented error shape is:
+     *   {"success": false, "errors": [{"code": 1000, "message": "..."}], ...}
+     *
+     * @param mixed $rspnse Decoded JSON response (or null/false on failure).
+     *
+     * @return array{success: bool, errors: string[]}
+     */
+    private function _normalizeApiError($rspnse)
+    {
+        $errors = [];
+
+        if (is_array($rspnse) && !empty($rspnse['errors']) && is_array($rspnse['errors'])) {
+            foreach ($rspnse['errors'] as $error) {
+                if (is_array($error) && isset($error['message'])) {
+                    $code = isset($error['code']) ? ' (code '.$error['code'].')' : '';
+                    $errors[] = $error['message'].$code;
+                } elseif (is_string($error) && $error !== '') {
+                    $errors[] = $error;
+                }
+            }
+        }
+
+        if (empty($errors)) {
+            $errors[] = 'Cloudflare API request failed with an empty or '
+                .'unrecognized response.';
+        }
+
+        return [
+            'success' => false,
+            'errors'  => $errors,
+        ];
     }
 
 
@@ -242,14 +291,21 @@ class DDNSUpdate
     private function _buildResponse($status, $data)
     {
         $response = '';
-        if (is_array($data)) {
+        if (is_array($data) && !empty($data)) {
             foreach ($data AS $item) {
-                if (boolval($item['success']) === true) {
-                    $response .= $item['result']['name']." updated to ".$item['result']['content']."\n";
-                } else {
-                    foreach ($item['errors'] AS $error) {
-                        $response .= $error."\n";
+                if (is_array($item) && array_key_exists('success', $item)) {
+                    // Raw Cloudflare API response (e.g. from a PUT update).
+                    if (boolval($item['success']) === true) {
+                        $response .= $item['result']['name']." updated to ".$item['result']['content']."\n";
+                    } else {
+                        $normalized = $this->_normalizeApiError($item);
+                        foreach ($normalized['errors'] AS $error) {
+                            $response .= $error."\n";
+                        }
                     }
+                } elseif (is_string($item)) {
+                    // Already-normalized error message string.
+                    $response .= $item."\n";
                 }
             }
         } else {
@@ -275,23 +331,38 @@ class DDNSUpdate
         // Get DNS details on the domains
         $status = $this->_domainsDNSDetails();
 
-        // Check if needs to update.
-        if (!isset($status['errors'])) {
+        // Check if the Cloudflare API call failed. `_domainsDNSDetails()`
+        // returns null on success, or a normalized ['success' => false,
+        // 'errors' => [...]] array when the API reported a failure.
+        $failed = is_array($status)
+            && array_key_exists('success', $status)
+            && $status['success'] === false;
+
+        if (!$failed) {
 
             // Everything went ok, check
             $update = $this->_checkIPsStatus();
             syslog(LOG_INFO, $this->_buildResponse('success', $update));
 
+            // Syslog
+            closelog();
+
         } else {
 
             // Errors found!
-            echo $this->_buildResponse('error', $status);
-            syslog(LOG_ERR, $this->_buildResponse('error', $status));
+            $message = $this->_buildResponse('error', $status['errors']);
+            echo $message;
+            syslog(LOG_ERR, $message);
+
+            // Syslog
+            closelog();
+
+            // Surface the failure to the caller so it isn't silently
+            // swallowed as a success (dns.update.php exits non-zero on
+            // this exception).
+            throw new \Exception(trim($message) !== '' ? trim($message) : 'Cloudflare API request failed.');
 
         }
-
-        // Syslog
-        closelog();
 
     }
 }

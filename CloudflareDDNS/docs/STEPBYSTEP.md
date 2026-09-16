@@ -70,6 +70,19 @@ After running the commands we get access to the settings file and follow the ins
 
 ![Filling settings values](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/images/step1.jpg)
 
+### IPv4 & IPv6 (AAAA) support
+
+`IP4_VAL` is required and is used to detect your public IPv4 address to keep
+`A` records updated. `IP6_VAL` is optional: if your server has IPv6
+connectivity, point it at an IPv6 lookup service (like the default
+`https://api6.ipify.org`) and the script will automatically detect your
+public IPv6 address and keep any matching `AAAA` records updated too.
+
+If your server doesn't have IPv6 connectivity, you can leave `IP6_VAL`
+blank (or leave the default value as-is) - the script will simply skip
+AAAA record handling and only manage `A`/IPv4 records, so nothing extra
+needs to be done for IPv4-only setups.
+
 ## Creating a Cloudflare API Token
 
 The recommended way to authenticate is with a scoped **API Token** instead

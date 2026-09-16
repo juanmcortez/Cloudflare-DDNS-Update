@@ -14,6 +14,7 @@ namespace CloudflareDDNS;
 class DDNSUpdate
 {
     // Protected credentials
+    protected $ddns_apitoken;
     protected $ddns_email;
     protected $ddns_gapik;
 
@@ -36,9 +37,21 @@ class DDNSUpdate
      */
     public function __construct()
     {
-        // Load credentials
-        $this->ddns_email = $_ENV['EMAIL'];
-        $this->ddns_gapik = $_ENV['GLOBAL_API_KEY'];
+        // Load credentials - API_TOKEN (scoped, recommended) takes precedence
+        // over the legacy Global API Key + Email pair.
+        $this->ddns_apitoken = (!empty($_ENV['API_TOKEN'])) ? $_ENV['API_TOKEN'] : null;
+        $this->ddns_email = (!empty($_ENV['EMAIL'])) ? $_ENV['EMAIL'] : null;
+        $this->ddns_gapik = (!empty($_ENV['GLOBAL_API_KEY'])) ? $_ENV['GLOBAL_API_KEY'] : null;
+
+        if (empty($this->ddns_apitoken) && (!empty($this->ddns_email) || !empty($this->ddns_gapik))) {
+            openlog("CloudflareDDNSUdpate", LOG_PID | LOG_PERROR, LOG_LOCAL0);
+            syslog(
+                LOG_WARNING,
+                "Deprecation warning: using GLOBAL_API_KEY/EMAIL auth is deprecated. ".
+                "Please switch to a scoped API_TOKEN. See README.md for details."
+            );
+            closelog();
+        }
 
         // Set services
         $this->_IPv4Service = $_ENV['IP4_VAL'];
@@ -179,8 +192,14 @@ class DDNSUpdate
         $curlURL .= $action;
 
         $curlAUTH[] = 'Content-Type: application/json';
-        $curlAUTH[] = 'X-Auth-Email: '.$this->ddns_email;
-        $curlAUTH[] = 'X-Auth-Key: '.$this->ddns_gapik;
+        if (!empty($this->ddns_apitoken)) {
+            // Preferred: scoped API Token via Bearer authentication.
+            $curlAUTH[] = 'Authorization: Bearer '.$this->ddns_apitoken;
+        } else {
+            // Deprecated fallback: legacy Global API Key + Email auth.
+            $curlAUTH[] = 'X-Auth-Email: '.$this->ddns_email;
+            $curlAUTH[] = 'X-Auth-Key: '.$this->ddns_gapik;
+        }
 
         // Start CURL actions
         $curl = curl_init();

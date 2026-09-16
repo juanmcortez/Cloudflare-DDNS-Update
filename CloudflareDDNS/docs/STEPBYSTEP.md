@@ -69,6 +69,33 @@ After running the commands we get access to the settings file and follow the ins
 
 ![Filling settings values](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/images/step1.jpg)
 
+## Creating a Cloudflare API Token
+
+The recommended way to authenticate is with a scoped **API Token** instead
+of the legacy Global API Key. To create one:
+
+1. Log into the [Cloudflare dashboard](https://dash.cloudflare.com/) and
+   click on your profile icon, then **My Profile**.
+2. Go to the **API Tokens** tab and click **Create Token**.
+3. Choose **Create Custom Token** and give it a descriptive name, e.g.
+   `ddns-update`.
+4. Under **Permissions**, add: `Zone` → `DNS` → `Edit`.
+5. Under **Zone Resources**, select **Include** → **Specific zone** and
+   choose the domain(s) you want the script to manage (or **All zones**
+   if you prefer).
+6. Click **Continue to summary**, then **Create Token**.
+7. Copy the generated token and paste it into the `API_TOKEN` field of
+   your `.env` file.
+
+```
+API_TOKEN=your-generated-token-here
+```
+
+The legacy `GLOBAL_API_KEY` and `EMAIL` fields are still supported as a
+**deprecated** fallback if `API_TOKEN` is left empty, but we recommend
+using the scoped API Token above since it doesn't grant full account
+access.
+
 To fill the values for the dns items, go to your Cloudflare dashboard for each of the domains:
 
 ![Get values from cloudflare](https://github.com/juanmcortez/Cloudflare-DDNS-Update/blob/master/CloudflareDDNS/docs/images/step2.jpg)

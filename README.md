@@ -31,6 +31,7 @@ have a secure site with really low cost!
 
 # Table of contents
 - [Cloudflare DNS Service](#cloudflare-dns-service)
+- [Authentication](#authentication)
 - [Fast install](#fast-install)
 - [Step-by-Step install](#step-by-step-install)
 - [Contributing](#contributing)
@@ -47,6 +48,27 @@ the future the API evolves or we decide to change things radically, we will crea
 a new repository for the script. This way, we can keep retro compatibility.
 
 
+# Authentication
+
+Cloudflare's recommended authentication method is a scoped **API Token**
+(Bearer token), and this is what the script uses by default. To create one:
+
+1. Log into the Cloudflare dashboard and go to **My Profile > API Tokens**.
+2. Click **Create Token**, and give it `Zone` → `DNS` → `Edit` permissions
+   scoped to the zone(s) you want the script to manage.
+3. Copy the generated token into the `API_TOKEN` field of your `.env` file.
+
+The legacy **Global API Key + Email** authentication method is still
+supported for backward compatibility, but is **deprecated** since it grants
+full account access instead of being scoped to DNS editing on specific
+zones. If `API_TOKEN` is not set, the script will fall back to
+`GLOBAL_API_KEY`/`EMAIL` and log a deprecation warning. We recommend
+migrating to `API_TOKEN` as soon as possible.
+
+See the [Step-by-Step install](#step-by-step-install) guide for detailed,
+illustrated instructions on creating an API Token.
+
+
 # Fast install
 
 The script can be easy installed, by just cloning the project or downloading the
@@ -54,7 +76,8 @@ release files as a zip.
 
 - Go to the server's user home folder and install the script there.
 
-- Once done, edit the .env file with the credentials required.
+- Once done, edit the .env file with the credentials required
+  (see [Authentication](#authentication) - `API_TOKEN` is recommended).
 
 - Create a cron job that points to the script and calls it every 15 mins.
 

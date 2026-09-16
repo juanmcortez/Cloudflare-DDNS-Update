@@ -19,9 +19,22 @@ openlog("CloudflareDDNSUdpate", LOG_PID | LOG_PERROR, LOG_LOCAL0);
 
 try {
 
-    // Check if credentials are in the env file.
+    // Check if credentials are in the env file. A scoped API_TOKEN is the
+    // preferred (Bearer) authentication method; the legacy GLOBAL_API_KEY +
+    // EMAIL pair is still supported as a deprecated fallback.
+    $dotenv->ifPresent('API_TOKEN')->notEmpty();
     $dotenv->ifPresent('GLOBAL_API_KEY')->notEmpty();
     $dotenv->ifPresent('EMAIL')->notEmpty();
+
+    $hasApiToken = !empty($_ENV['API_TOKEN']);
+    $hasLegacyAuth = !empty($_ENV['GLOBAL_API_KEY']) && !empty($_ENV['EMAIL']);
+
+    if (!$hasApiToken && !$hasLegacyAuth) {
+        throw new \Exception(
+            'Missing credentials. Set API_TOKEN (recommended) or both '.
+            'GLOBAL_API_KEY and EMAIL (deprecated) in your .env file.'
+        );
+    }
 
     // Check if the ip discovering system has been added to env file
     $dotenv->ifPresent('IP4_VAL')->notEmpty();

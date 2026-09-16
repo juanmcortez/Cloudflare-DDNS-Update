@@ -80,10 +80,37 @@ class DDNSUpdate
      */
     private function _findCurrentIPofServer()
     {
-        // Get ipv4
-        $this->_currentIPv4 = file_get_contents($this->_IPv4Service);
-        // Get ipv6
-        $this->_currentIPv6 = file_get_contents($this->_IPv6Service);
+        // Get ipv4 (required)
+        $ipv4 = @file_get_contents($this->_IPv4Service);
+        $this->_currentIPv4 = $this->_validateIP($ipv4, FILTER_FLAG_IPV4);
+
+        // Get ipv6 (optional). Not every host has IPv6 connectivity, and the
+        // configured lookup service may fail/be unreachable in that case, so
+        // any failure here is treated as "no IPv6 available" rather than a
+        // fatal error. This keeps IPv4-only setups working exactly as before.
+        $ipv6 = (!empty($this->_IPv6Service)) ? @file_get_contents($this->_IPv6Service) : false;
+        $this->_currentIPv6 = $this->_validateIP($ipv6, FILTER_FLAG_IPV6);
+    }
+
+    /**
+     * Validate that a value is a well-formed IP address of the expected
+     * family, trimming any surrounding whitespace/newlines that IP lookup
+     * services commonly return.
+     *
+     * @param mixed $value Raw value returned by the IP lookup service.
+     * @param int   $flag  FILTER_FLAG_IPV4 or FILTER_FLAG_IPV6.
+     *
+     * @return string|null The validated/trimmed IP, or null when invalid.
+     */
+    private function _validateIP($value, $flag)
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return (filter_var($value, FILTER_VALIDATE_IP, $flag) !== false) ? $value : null;
     }
 
 
@@ -94,39 +121,54 @@ class DDNSUpdate
      */
     private function _domainsDNSDetails()
     {
+        // Always look up A/IPv4 records. Only look up AAAA/IPv6 records when
+        // we successfully detected a public IPv6 address for this host, so
+        // hosts without IPv6 connectivity keep behaving exactly as before
+        // (a single A-record lookup/update per domain).
+        $recordTypes = ['A'];
+        if (!empty($this->_currentIPv6)) {
+            $recordTypes[] = 'AAAA';
+        }
+
         // Get details
         foreach ($this->_ddns_domain AS $key => $domain) {
-            // Get info from curl
-            $action = 'dns_records/?type=A&name='.$domain['DOMAIN'];
-            $rspnse = $this->getCURLData('GET', $domain, $action);
-
             // Prepare for compare
             $this->_currDNSInfo[$key]['DOMAIN'] = $domain['DOMAIN'];
             $this->_currDNSInfo[$key]['ZONEID'] = $domain['ZONEID'];
 
-            // Check status of response. Cloudflare's API always returns a
-            // top-level "success" boolean; only trust the result when it is
-            // explicitly true, since a malformed/empty response must never
-            // be treated as a success.
-            if (is_array($rspnse)
-                && array_key_exists('success', $rspnse)
-                && boolval($rspnse['success']) === true
-                && is_array($rspnse['result'] ?? null)
-            ) {
-                // Success
-                foreach ($rspnse['result'] AS $idx => $domain) {
-                    $this->_currDNSInfo[$key][$idx]['DNSID']    = $domain['id'];
-                    $this->_currDNSInfo[$key][$idx]['TYPE']     = $domain['type'];
-                    $this->_currDNSInfo[$key][$idx]['CONTENT']  = $domain['content'];
-                    $this->_currDNSInfo[$key][$idx]['PROXIED']  = $domain['proxied'];
-                    $this->_currDNSInfo[$key][$idx]['TTL']      = $domain['ttl'];
+            foreach ($recordTypes AS $type) {
+                // Get info from curl
+                $action = 'dns_records/?type='.$type.'&name='.$domain['DOMAIN'];
+                $rspnse = $this->getCURLData('GET', $domain, $action);
+
+                // Check status of response. Cloudflare's API always returns
+                // a top-level "success" boolean; only trust the result when
+                // it is explicitly true, since a malformed/empty response
+                // must never be treated as a success.
+                if (is_array($rspnse)
+                    && array_key_exists('success', $rspnse)
+                    && boolval($rspnse['success']) === true
+                    && is_array($rspnse['result'] ?? null)
+                ) {
+                    // Success - append every returned record (there may be
+                    // more than one A/AAAA record for the same name).
+                    foreach ($rspnse['result'] AS $record) {
+                        $this->_currDNSInfo[$key][] = [
+                            'DNSID'   => $record['id'],
+                            'TYPE'    => $record['type'],
+                            'CONTENT' => $record['content'],
+                            'PROXIED' => $record['proxied'],
+                            'TTL'     => $record['ttl'],
+                        ];
+                    }
+                } else {
+                    // Fail! Normalize the response into a consistent
+                    // ['success' => false, 'errors' => [...]] shape, whether
+                    // Cloudflare returned a proper error payload or the
+                    // response was empty/malformed (e.g. curl failure, HTML
+                    // error page).
+                    return $this->_normalizeApiError($rspnse);
                 }
-            } else {
-                // Fail! Normalize the response into a consistent
-                // ['success' => false, 'errors' => [...]] shape, whether
-                // Cloudflare returned a proper error payload or the response
-                // was empty/malformed (e.g. curl failure, HTML error page).
-                return $this->_normalizeApiError($rspnse);
             }
         }
 
@@ -178,14 +220,24 @@ class DDNSUpdate
      */
     private function _checkIPsStatus()
     {
-        $rspnse = '';
+        // Must be an array (not a string) since successful updates append
+        // to it below via `$rspnse[] = ...`; `_buildResponse()` already
+        // handles an empty array the same way it handled an empty string
+        // (both are falsy, so "No changes" is reported when nothing updates).
+        $rspnse = [];
         foreach ($this->_currDNSInfo AS $key => $current) {
             foreach ($current AS $idx => $item) {
 
-                // Check IPv4
-                if (is_array($item)
+                if (!is_array($item)) {
+                    continue;
+                }
+
+                // Check IPv4. The `!empty($this->_currentIPv4)` guard avoids
+                // ever pushing an empty/invalid value as the new record
+                // content if the IPv4 lookup service failed.
+                if ($item['TYPE'] == 'A'
+                    && !empty($this->_currentIPv4)
                     && $item['CONTENT'] != $this->_currentIPv4
-                    && $item['TYPE'] == 'A'
                 ) {
                     // Update IPv4
                     $method = 'PUT';
@@ -200,10 +252,14 @@ class DDNSUpdate
                     $rspnse[] = $this->getCURLData($method, $current, $action, $upData);
                 }
 
-                // Check IPv6
-                if (is_array($item)
+                // Check IPv6. AAAA records are only ever present in
+                // `_currDNSInfo` when a public IPv6 address was detected
+                // (see `_domainsDNSDetails()`), but the `!empty()` guard is
+                // kept here too as defense in depth so an AAAA record is
+                // never overwritten with an empty value.
+                if ($item['TYPE'] == 'AAAA'
+                    && !empty($this->_currentIPv6)
                     && $item['CONTENT'] != $this->_currentIPv6
-                    && $item['TYPE'] == 'AAAA'
                 ) {
                     // Update IPv6
                     $method = 'PUT';

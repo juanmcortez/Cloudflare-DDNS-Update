@@ -31,6 +31,7 @@ have a secure site with really low cost!
 
 # Table of contents
 - [Cloudflare DNS Service](#cloudflare-dns-service)
+- [IPv4 & IPv6 support](#ipv4--ipv6-support)
 - [Authentication](#authentication)
 - [Fast install](#fast-install)
 - [Step-by-Step install](#step-by-step-install)
@@ -46,6 +47,26 @@ have a secure site with really low cost!
 We are going to use Cloudflare's API v4 system to keep our records updated. If in
 the future the API evolves or we decide to change things radically, we will create
 a new repository for the script. This way, we can keep retro compatibility.
+
+
+# IPv4 & IPv6 support
+
+The script keeps both `A` (IPv4) and `AAAA` (IPv6) DNS records in sync:
+
+- `IP4_VAL` (required) points to a service that returns your public IPv4
+  address. Any `A` record found for your configured domains is compared
+  against it and updated when it drifts.
+- `IP6_VAL` (optional) points to a service that returns your public IPv6
+  address. When it resolves to a valid IPv6 address, any `AAAA` record
+  found for your configured domains is compared against it and updated
+  the same way `A` records are.
+
+If your server/network doesn't have IPv6 connectivity, or `IP6_VAL` is left
+blank/unreachable, the script simply skips AAAA record lookups and updates -
+your IPv4-only setup keeps working exactly as before. No manual "IPv6
+enabled" flag is needed; support is detected automatically at runtime.
+
+See [`.env.example`](.env.example) for the `IP4_VAL`/`IP6_VAL` configuration.
 
 
 # Authentication

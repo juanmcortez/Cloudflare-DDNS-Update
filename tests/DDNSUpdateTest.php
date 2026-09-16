@@ -22,6 +22,15 @@ class TestableDDNSUpdate extends DDNSUpdate
     /** @var int */
     private $callIndex = 0;
 
+    /**
+     * Every getCURLData() call made during the test, in order, captured so
+     * assertions can verify which record types/actions were queried or
+     * updated (e.g. that AAAA lookups are skipped/performed as expected).
+     *
+     * @var array<int, array{method: string, domain: array, action: string, postData: ?array}>
+     */
+    public $calls = [];
+
     public function __construct(array $responses)
     {
         $this->responses = $responses;
@@ -30,6 +39,13 @@ class TestableDDNSUpdate extends DDNSUpdate
 
     protected function getCURLData($method, $domain, $action, $postData = null)
     {
+        $this->calls[] = [
+            'method'   => $method,
+            'domain'   => $domain,
+            'action'   => $action,
+            'postData' => $postData,
+        ];
+
         $response = $this->responses[$this->callIndex] ?? null;
         $this->callIndex++;
         return $response;
@@ -114,7 +130,7 @@ class DDNSUpdateTest extends TestCase
      */
     public function testUpdateDoesNotThrowOnSuccessResponse(): void
     {
-        $cloudflareSuccessResponse = [
+        $cloudflareARecordResponse = [
             'success'  => true,
             'errors'   => [],
             'messages' => [],
@@ -130,11 +146,32 @@ class DDNSUpdateTest extends TestCase
             ],
         ];
 
-        $ddns = new TestableDDNSUpdate([$cloudflareSuccessResponse]);
+        $cloudflareAAAARecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'record456',
+                    'type'    => 'AAAA',
+                    // Matches IP6_VAL above, so no update PUT is triggered.
+                    'content' => '2001:db8::1',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        // IPv6 is available in setUp(), so a second (AAAA) lookup is made.
+        $ddns = new TestableDDNSUpdate([$cloudflareARecordResponse, $cloudflareAAAARecordResponse]);
 
         // Should complete without throwing.
         $ddns->update();
         $this->addToAssertionCount(1);
+
+        $this->assertCount(2, $ddns->calls);
+        $this->assertStringContainsString('type=A&', $ddns->calls[0]['action']);
+        $this->assertStringContainsString('type=AAAA&', $ddns->calls[1]['action']);
     }
 
     /**
@@ -185,5 +222,187 @@ class DDNSUpdateTest extends TestCase
 
         $this->assertFalse($result['success']);
         $this->assertNotEmpty($result['errors']);
+    }
+
+    /**
+     * When the host has a public IPv6 address, a stale AAAA record (whose
+     * content differs from the detected IPv6) must be fetched and then
+     * updated via a PUT request with the new IPv6 content - the same way
+     * stale A records are handled for IPv4.
+     */
+    public function testUpdateFetchesAndUpdatesStaleAAAARecordWhenIPv6Available(): void
+    {
+        $aRecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'recordA',
+                    'type'    => 'A',
+                    // Matches IP4_VAL from setUp(), so no A update is triggered.
+                    'content' => '203.0.113.10',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        $aaaaRecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'recordAAAA',
+                    'type'    => 'AAAA',
+                    // Stale - does not match IP6_VAL (2001:db8::1) from setUp().
+                    'content' => '2001:db8::dead',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        $updatePutResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                'name'    => 'example.com',
+                'content' => '2001:db8::1',
+            ],
+        ];
+
+        $ddns = new TestableDDNSUpdate([$aRecordResponse, $aaaaRecordResponse, $updatePutResponse]);
+
+        $ddns->update();
+
+        // 2 GET lookups (A + AAAA) followed by 1 PUT update for the stale AAAA record.
+        $this->assertCount(3, $ddns->calls);
+
+        $this->assertSame('GET', $ddns->calls[0]['method']);
+        $this->assertStringContainsString('type=A&name=example.com', $ddns->calls[0]['action']);
+
+        $this->assertSame('GET', $ddns->calls[1]['method']);
+        $this->assertStringContainsString('type=AAAA&name=example.com', $ddns->calls[1]['action']);
+
+        $this->assertSame('PUT', $ddns->calls[2]['method']);
+        $this->assertSame('dns_records/recordAAAA', $ddns->calls[2]['action']);
+        $this->assertSame('AAAA', $ddns->calls[2]['postData']['type']);
+        $this->assertSame('2001:db8::1', $ddns->calls[2]['postData']['content']);
+    }
+
+    /**
+     * When the IPv6 lookup service is unavailable/empty (e.g. the host has
+     * no IPv6 connectivity), the tool must not attempt an AAAA lookup at
+     * all, and must keep behaving exactly like an IPv4-only setup.
+     */
+    public function testUpdateSkipsAAAALookupWhenIPv6Unavailable(): void
+    {
+        // Simulate a failed/empty IPv6 lookup (e.g. no IPv6 connectivity).
+        $_ENV['IP6_VAL'] = 'data://text/plain,';
+
+        $aRecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'recordA',
+                    'type'    => 'A',
+                    'content' => '203.0.113.10',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        $ddns = new TestableDDNSUpdate([$aRecordResponse]);
+
+        $ddns->update();
+
+        // Only the A lookup should have been made - no AAAA lookup/update.
+        $this->assertCount(1, $ddns->calls);
+        $this->assertStringContainsString('type=A&name=example.com', $ddns->calls[0]['action']);
+    }
+
+    /**
+     * A malformed/non-IP value returned by the IPv6 lookup service (e.g. an
+     * HTML error page) must be treated as "no IPv6 available", not as a
+     * literal record content to compare/update against.
+     */
+    public function testUpdateSkipsAAAALookupWhenIPv6ServiceReturnsInvalidValue(): void
+    {
+        $_ENV['IP6_VAL'] = 'data://text/plain,<html>Service Unavailable</html>';
+
+        $aRecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'recordA',
+                    'type'    => 'A',
+                    'content' => '203.0.113.10',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        $ddns = new TestableDDNSUpdate([$aRecordResponse]);
+
+        $ddns->update();
+
+        $this->assertCount(1, $ddns->calls);
+        $this->assertStringContainsString('type=A&name=example.com', $ddns->calls[0]['action']);
+    }
+
+    /**
+     * A fresh AAAA record (content already matches the detected IPv6) must
+     * not trigger an update PUT request.
+     */
+    public function testUpdateDoesNotUpdateAAAARecordWhenAlreadyCurrent(): void
+    {
+        $aRecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'recordA',
+                    'type'    => 'A',
+                    'content' => '203.0.113.10',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        $aaaaRecordResponse = [
+            'success'  => true,
+            'errors'   => [],
+            'messages' => [],
+            'result'   => [
+                [
+                    'id'      => 'recordAAAA',
+                    'type'    => 'AAAA',
+                    // Already matches IP6_VAL (2001:db8::1) from setUp().
+                    'content' => '2001:db8::1',
+                    'proxied' => false,
+                    'ttl'     => 300,
+                ],
+            ],
+        ];
+
+        $ddns = new TestableDDNSUpdate([$aRecordResponse, $aaaaRecordResponse]);
+
+        $ddns->update();
+
+        // Only the 2 GET lookups - no PUT update for either record.
+        $this->assertCount(2, $ddns->calls);
+        $this->assertSame('GET', $ddns->calls[0]['method']);
+        $this->assertSame('GET', $ddns->calls[1]['method']);
     }
 }
